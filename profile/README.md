@@ -52,6 +52,7 @@ flowchart TD
         MS_EC["ms-espacios-comunes\n(FastAPI + Python 3.12)"]
         MS_GC["ms-gastos-comunes\n(Spring Boot 4 + Java 25)"]
         MS_CO["ms-condominios\n(FastAPI + Multi-tenancy)"]
+        MS_US["ms-usuario-cloud\n(FastAPI + Roles por condominio)"]
         RMQ[("RabbitMQ\n(Event Broker: Sagas / Outbox)")]
     end
 
@@ -66,9 +67,13 @@ flowchart TD
     BFF --> MS_EC
     BFF --> MS_GC
     BFF --> MS_CO
+    BFF --> MS_US
     MS_EC <-->|Eventos de Reserva| RMQ
     MS_GC <-->|Eventos de Cobro| RMQ
+    MS_EC -.->|Configuración Centralizada| CONFIG
     MS_GC -.->|Configuración Centralizada| CONFIG
+    MS_CO -.->|Configuración Centralizada| CONFIG
+    MS_US -.->|Configuración Centralizada| CONFIG
     BFF -.->|Resolución de Servicios| DISCOV
 ```
 
@@ -86,7 +91,8 @@ Todos los componentes de Convivo se encuentran modularizados en repositorios ind
 | [**`ms-espacios-comunes`**](https://github.com/Cloud-Native-Convivo/ms-espacios-comunes) | Microservicio | FastAPI, Python 3.12, SQLAlchemy | Gestión de quinchos, salas de eventos y piscinas con validación estricta de solapamiento horario (409 Conflict). |
 | [**`ms-gastos-comunes`**](https://github.com/Cloud-Native-Convivo/ms-gastos-comunes) | Microservicio | Spring Boot 4, Java 25, RabbitMQ | Facturación, cálculo de prorrateos, conciliación de pagos y patrón Inbox/Outbox transaccional. |
 | [**`ms-condominios`**](https://github.com/Cloud-Native-Convivo/ms-condominios) | Microservicio | FastAPI, Python 3.12, SQLAlchemy | Multi-tenancy, administración de comunidades, edificios, torres y unidades residenciales. |
-| [**`config-server-cloud`**](https://github.com/Cloud-Native-Convivo/config-server-cloud) | Infraestructura App | Spring Cloud Config, Java 25 | Servidor de configuración distribuida y versionada por perfiles de entorno (`dev`, `prod`). |
+| [**`ms-usuario-cloud`**](https://github.com/Cloud-Native-Convivo/ms-usuario-cloud) | Microservicio | FastAPI, Python 3.12, SQLAlchemy | Usuarios, identidades y roles por condominio. En fase inicial: modelo y perfil propio (`GET /usuarios/me`). |
+| [**`config-server-cloud`**](https://github.com/Cloud-Native-Convivo/config-server-cloud) | Infraestructura App | Spring Cloud Config, Java 25 | Servidor de configuración distribuida y versionada por perfiles de entorno (`dev`, `prod`). Sirve la configuración de `ms-espacios-comunes`, `ms-gastos-comunes`, `ms-condominios`, `ms-usuario-cloud` y `bff`; las credenciales siguen en variables de entorno. |
 | [**`discovery-server-cloud`**](https://github.com/Cloud-Native-Convivo/discovery-server-cloud) | Infraestructura App | Spring Cloud Netflix Eureka, Java 25 | Registro dinámico de instancias y balanceo de carga interno a nivel de aplicación. |
 | [**`terraform-cloud`**](https://github.com/Cloud-Native-Convivo/terraform-cloud) | IaC AWS | Terraform (~> 6.0), AWS ECS Fargate, VPC | Aprovisionamiento declarativo de infraestructura en AWS: subnets públicas/privadas, NLB interno, API Gateway, Cognito y Secrets Manager. |
 
